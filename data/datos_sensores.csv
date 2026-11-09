@@ -1,0 +1,17 @@
+paso,segundo,luz,humedad,temperatura,presencia,comentario
+1,0,100,45.0,21.0,0,Estado inicial: reposo sin personas
+2,2,110,46.0,21.2,0,Reposo sin presencia
+3,4,90,45.5,21.1,1,Entra persona con poca luz (<150 lux) -> Regla R1/R5: Bombilla ON
+4,6,120,46.5,21.5,1,Persona dentro de la habitacion
+5,8,130,47.0,21.7,1,Persona dentro
+6,10,350,48.0,22.0,0,Sale la persona -> Regla R2: Bombilla OFF y Persiana CERRADA
+7,12,380,48.5,22.1,0,Habitacion vacia con luz natural
+8,14,400,75.0,23.5,0,Sube la humedad (>70%) -> Regla R3: Abrir Persiana
+9,16,420,82.0,24.0,0,Humedad muy alta: persiana permanece ABIERTA
+10,18,500,60.0,23.0,0,Humedad normalizandose
+11,20,850,28.0,28.5,0,Mucho sol (>600 lux) y aire seco (<40%) -> Regla R4: Cerrar Persiana
+12,22,920,25.0,29.0,0,Proteccion solar activa
+13,24,500,45.0,25.0,0,Mediodia nublado
+14,26,95,48.0,21.0,0,Cae la noche / luz baja (<150 lux) -> Regla R5: Bombilla ON
+15,28,80,50.0,20.5,0,Noche cerrada con luz artificial encendida
+16,30,80,50.0,20.5,0,Fin de la secuencia de prueba
