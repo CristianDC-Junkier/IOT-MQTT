@@ -24,7 +24,7 @@ ARCHIVO_LUZ = os.path.join(CARPETA_EVENTS, "luz.csv")
 os.makedirs(CARPETA_OUTPUT, exist_ok=True)
 os.makedirs(CARPETA_EVENTS, exist_ok=True)
 
-# Diccionario global para mantener en memoria los valores vigentes de la sala (para la tarjeta resumen)
+# Diccionario global para mantener en memoria los valores vigentes de la sala
 estado_habitacion = {
     "luz": "--",
     "humedad": "--",
@@ -37,17 +37,24 @@ estado_habitacion = {
 }
 
 
-# Imprime la tarjeta resumen estructurada del estado de la estancia
+# Imprime la tarjeta resumen estructurada con anchos exactos alineados
 def imprimir_resumen_habitacion(hora_str):
     pres_val = estado_habitacion["presencia_valor"]
     pres_str = "SI (1)" if pres_val == 1 else "NO (0)"
-    print("┌────────────────────────────────────────────────────────────────────┐")
-    print(f"│ ESTADO DE LA HABITACION INTELIGENTE (Grupo: {GRUPO})   Hora: {hora_str} │")
-    print("├────────────────────────────────────────────────────────────────────┤")
-    print(f"│ Luz: {str(estado_habitacion['luz']):<10} | Humedad: {str(estado_habitacion['humedad']):<8} | Temp: {str(estado_habitacion['temperatura']):<12} │")
-    print(f"│ Presencia: {pres_str:<8} | Bombilla: {str(estado_habitacion['bombilla']):<6} | Persiana: {str(estado_habitacion['persiana']):<10} │")
-    print(f"│ Ultima Regla: {estado_habitacion['ultima_regla'][:48]:<48} │")
-    print("└────────────────────────────────────────────────────────────────────┘\n")
+
+    # Ancho total interior fijo de 62 caracteres exactos
+    linea_sup = "+" + "-" * 62 + "+"
+    
+    print()
+    print(linea_sup)
+    print(f"| ESTADO ACTUAL DE LA ESTANCIA | Grupo: {GRUPO:<5} | Hora: {hora_str} |")
+    print(linea_sup)
+    print(f"| - Luz       : {str(estado_habitacion['luz']):<12} | Bombilla : {str(estado_habitacion['bombilla']):<20} |")
+    print(f"| - Humedad   : {str(estado_habitacion['humedad']):<12} | Persiana : {str(estado_habitacion['persiana']):<20} |")
+    print(f"| - Temp      : {str(estado_habitacion['temperatura']):<12} | Presencia: {pres_str:<20} |")
+    print(linea_sup)
+    print(f"| - Ultima regla: {str(estado_habitacion['ultima_regla'])[:44]:<44} |")
+    print(linea_sup + "\n")
 
 
 # Callback al conectar exitosamente al broker MQTT
@@ -55,7 +62,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         topic = topic_todo(GRUPO)
         print("Monitor conectado exitosamente a HiveMQ")
-        print(f"Escuchando toda la actividad del grupo en: {topic}\n")
+        print(f"Escuchando actividad en: {topic}\n")
         client.subscribe(topic, qos=0)
     else:
         print(f"Error de conexion al broker. Codigo rc={rc}")
@@ -100,7 +107,7 @@ def on_message(client, userdata, msg):
                     writer = csv.writer(f)
                     writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), valor])
 
-            print(f"[{ahora}] [SENSOR]   {tipo_sensor.upper():<12} = {valor} {unidad}")
+            print(f"[{ahora}] [SENSOR] {tipo_sensor.upper():<12} = {valor} {unidad}")
 
             # Registrar snapshot consolidado en CSV
             with open(ARCHIVO_SNAPSHOT, mode="a", newline="", encoding="utf-8") as f:
@@ -118,7 +125,7 @@ def on_message(client, userdata, msg):
         # Procesar órdenes emitidas hacia los actuadores
         elif "/actuador/" in topic and topic.endswith("/set"):
             tipo_act = topic.split("/")[-2]
-            print(f"[{ahora}] [ORDEN ACT]  {tipo_act.upper():<12} -> {payload_str} (Topic: {topic})")
+            print(f"[{ahora}] [ORDEN ACT]  {tipo_act.upper():<12} -> {payload_str}")
 
         # Procesar reportes de estado confirmados por los actuadores
         elif "/actuador/" in topic and topic.endswith("/estado"):
@@ -133,10 +140,10 @@ def on_message(client, userdata, msg):
 
             estado_habitacion[tipo_act] = str(estado).strip().upper()
             ret = " [RETENIDO]" if msg.retain else ""
-            print(f"[{ahora}] [ESTADO ACT] {tipo_act.upper():<12} = {estado} (Origen: {origen}){ret}")
+            print(f"[{ahora}] [ESTADO ACT] {tipo_act.upper():<12} = {estado} ({origen}){ret}")
             imprimir_resumen_habitacion(ahora)
 
-        # Procesar auditorías de reglas emitidas por el motor de reglas (reglas.py)
+        # Procesar auditorías de reglas emitidas por el motor de reglas
         elif "/sistema/regla" in topic:
             try:
                 datos = json.loads(payload_str)
@@ -145,24 +152,25 @@ def on_message(client, userdata, msg):
                 regla_txt = payload_str
 
             estado_habitacion["ultima_regla"] = regla_txt
-            print(f"[{ahora}] [REGLA ACTIVADA] {regla_txt}")
+            print(f"[{ahora}] [REGLA]      {regla_txt}")
 
         # Procesar mensajes de testamento LWT
         elif topic.endswith("/lwt"):
             nodo = topic.split("/")[-2]
             estado = payload_str.strip().upper()
-            print(f"[{ahora}] [ESTADO LWT] Nodo '{nodo}' esta {estado}")
+            print(f"[{ahora}] [LWT]  Nodo '{nodo}' -> {estado}")
 
     except Exception as e:
         print(f"Error procesando mensaje en {topic}: {e}")
 
 
 def main():
-    print("=" * 70)
+    print("=" * 64)
     print(f"MONITOR Y VISOR DE EVENTOS MQTT (Grupo: {GRUPO})")
-    print("=" * 70)
-    print(f"- Broker:  {BROKER_DEFAULT}:{PUERTO_DEFAULT} | Filtro:  {topic_todo(GRUPO)}")
-    print("-" * 70)
+    print("=" * 64)
+    print(f"Broker : {BROKER_DEFAULT}:{PUERTO_DEFAULT}")
+    print(f"Filtro : {topic_todo(GRUPO)}")
+    print("-" * 64)
 
     for archivo in [ARCHIVO_PRESENCIA, ARCHIVO_TEMPERATURA, ARCHIVO_HUMEDAD, ARCHIVO_LUZ]:
         if not os.path.exists(archivo):
@@ -191,10 +199,10 @@ def main():
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("\nDeteniendo monitor...")
-        client.loop_stop()
-        client.disconnect()
-        print("Monitor desconectado correctamente.\n")
+            print("\nDeteniendo monitor...")
+            client.loop_stop()
+            client.disconnect()
+            print("Monitor desconectado correctamente.\n")
 
 
 if __name__ == "__main__":

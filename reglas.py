@@ -67,48 +67,48 @@ def evaluar_reglas(e):
             ordenes["bombilla"] = "OFF"
         if persiana_actual != "CERRADA":
             ordenes["persiana"] = "CERRADA"
-        reglas_disparadas.append("R2: Persona ha salido -> Bombilla OFF y Persiana CERRADA")
+        reglas_disparadas.append("R2: Persona ha salido -> B OFF y P CER")
 
     # REGLA R1: Entrada de persona Y luz < UMBRAL_LUZ_BAJA -> Encender bombilla
     # Justificación: Confort visual inmediato al acceder a una habitación oscura.
     if ha_entrado and (luz is not None and luz < UMBRAL_LUZ_BAJA):
         if bombilla_actual != "ON":
             ordenes["bombilla"] = "ON"
-        reglas_disparadas.append(f"R1: Entrada de persona con poca luz ({luz} < {UMBRAL_LUZ_BAJA} lux) -> Bombilla ON")
+        reglas_disparadas.append(f"R1: Entrada de persona con poca luz -> B ON")
 
     # REGLA R5: Presencia activa Y luz < UMBRAL_LUZ_BAJA -> Encender bombilla
     # Justificación: Mantenimiento de iluminación artificial si oscurece con usuarios dentro.
     if presencia == 1 and (luz is not None and luz < UMBRAL_LUZ_BAJA):
         if bombilla_actual != "ON":
             ordenes["bombilla"] = "ON"
-
+        reglas_disparadas.append(f"R5: Presencia activa con poca luz -> B ON")
     # REGLA R3: Humedad relativa > UMBRAL_HUMEDAD_ALTA -> Abrir persiana
     # Justificación: Ventilación natural de choque para disipar condensaciones o vapor.
     if humedad is not None and humedad > UMBRAL_HUMEDAD_ALTA:
         if persiana_actual != "ABIERTA":
             ordenes["persiana"] = "ABIERTA"
-            reglas_disparadas.append(f"R3: Humedad alta ({humedad}% > {UMBRAL_HUMEDAD_ALTA}%) -> Persiana ABIERTA (Ventilación)")
+            reglas_disparadas.append(f"R3: Humedad alta -> P ABI")
             
     # REGLA R4: Luz natural > UMBRAL_LUZ_ALTA Y Humedad < UMBRAL_HUMEDAD_BAJA -> Cerrar persiana
     # Justificación: Protección solar pasiva contra sobrecalentamiento por radiación.
     elif (luz is not None and luz > UMBRAL_LUZ_ALTA) and (humedad is not None and humedad < UMBRAL_HUMEDAD_BAJA):
         if persiana_actual != "CERRADA":
             ordenes["persiana"] = "CERRADA"
-            reglas_disparadas.append(f"R4: Mucha luz ({luz} lux > {UMBRAL_LUZ_ALTA}) y aire seco ({humedad}% < {UMBRAL_HUMEDAD_BAJA}%) -> Persiana CERRADA")
+            reglas_disparadas.append(f"R4: Mucha luz y aire seco -> P CER")
 
     # REGLA R6: Temperatura elevada (> 30.0 C) con presencia activa -> Abrir persiana
     # Justificación: Mejora del flujo de aire y refrigeración pasiva por confort térmico.
     if temperatura is not None and temperatura > 30.0 and presencia == 1:
         if persiana_actual != "ABIERTA":
             ordenes["persiana"] = "ABIERTA"
-            reglas_disparadas.append(f"R6: Temperatura alta ({temperatura} C) con presencia -> Persiana ABIERTA")
+            reglas_disparadas.append(f"R6: Temperatura alta con presencia -> P ABI")
 
     # REGLA R7: Temperatura baja (< 18.0 C) -> Cerrar persiana
     # Justificación: Aislamiento térmico pasivo para evitar pérdidas de calor en épocas frías.
     if temperatura is not None and temperatura < 18.0:
         if persiana_actual != "CERRADA":
             ordenes["persiana"] = "CERRADA"
-            reglas_disparadas.append(f"R7: Temperatura baja ({temperatura} C) -> Persiana CERRADA")
+            reglas_disparadas.append(f"R7: Temperatura baja -> P CER")
 
     return ordenes, reglas_disparadas
 

@@ -132,3 +132,21 @@ python sensor.py --tipo presencia --grupo g99 --periodo 2.0
 * **R5:** Presencia activa ($1$) con Luz $< 150\text{ lux} \Rightarrow \text{Bombilla ON}$ (Mantenimiento de luz).
 * **R6:** Temperatura $> 30^\circ\text{C}$ con Presencia activa ($1$) $\Rightarrow \text{Persiana ABIERTA}$ (Refrigeración pasiva).
 * **R7:** Temperatura $< 18^\circ\text{C} \Rightarrow \text{Persiana CERRADA}$ (Aislamiento térmico).
+
+## 5. Script Avanzado de Mensajes Retenidos (`avanzado_retained.py`)
+
+Para demostrar el comportamiento del flag `retain=True` frente a los mensajes efímeros (`retain=False`) tal como se exige en la práctica:
+
+## 6. Testamento (Last Will and Testament, LWT) y Keepalive (`avanzado_lwt.py`)
+
+Este script automatizado mide el tiempo real que tarda el broker en detectar la caída imprevista de un nodo y disparar su testamento sin recurrir a polling HTTP continuo.
+
+#### Ejecución:
+```bash
+python avanzado_lwt.py g99
+```
+
+### Ejecución de la prueba:
+```bash
+python avanzado_retained.py g99
+```
