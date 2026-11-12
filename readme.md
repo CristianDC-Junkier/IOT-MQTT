@@ -9,13 +9,26 @@ Este proyecto implementa una solución completa de IoT para la gestión intelige
 Asegúrate de que la estructura de carpetas y archivos en tu directorio de trabajo sea la siguiente:
 
 ```text
+# Práctica 2: Sistema IoT Domótico con Protocolo MQTT
+
+Este proyecto implementa una solución completa de IoT para la gestión inteligente de una habitación utilizando el protocolo **MQTT**, el broker público **HiveMQ** (`broker.hivemq.com`), y almacenamiento local protegido de datos de telemetría y eventos.
+
+---
+
+## 1.- Estructura del Proyecto
+
+Asegúrate de que la estructura de carpetas y archivos en tu directorio de trabajo sea la siguiente:
+
+```text
 Practica_2_IoT/
 ├── config.py             # Configuración central (broker, tópicos y umbrales)
 ├── sensor.py             # Emulador de sensores virtuales (luz, humedad, temperatura, presencia)
 ├── actuador.py           # Simulador interactivo de actuadores (bombilla, persiana)
 ├── reglas.py             # Motor reactivo de 7 reglas domóticas
-├── controlador.py         # Monitor central y generador de persistencia CSV
+├── controlador.py        # Monitor central y generador de persistencia CSV
 ├── lanzar_todo.py        # Lanzador automatizado conjunto mediante subprocesos
+├── avanzado_retained.py  # Script avanzado de demostración de mensajes retenidos
+├── avanzado_lwt.py       # Script avanzado de demostración de LWT y Keepalive
 ├── data/                 # Ficheros CSV de entrada para los sensores virtuales
 │   ├── datos_luz.csv
 │   ├── datos_humedad.csv
@@ -130,8 +143,6 @@ python sensor.py --tipo presencia --grupo g99 --periodo 2.0
 * **R3:** Humedad relativa $> 70\% \Rightarrow \text{Persiana ABIERTA}$ (Ventilación).
 * **R4:** Luz natural $> 600\text{ lux}$ y Humedad $< 40\% \Rightarrow \text{Persiana CERRADA}$ (Protección solar).
 * **R5:** Presencia activa ($1$) con Luz $< 150\text{ lux} \Rightarrow \text{Bombilla ON}$ (Mantenimiento de luz).
-* **R6:** Temperatura $> 30^\circ\text{C}$ con Presencia activa ($1$) $\Rightarrow \text{Persiana ABIERTA}$ (Refrigeración pasiva).
-* **R7:** Temperatura $< 18^\circ\text{C} \Rightarrow \text{Persiana CERRADA}$ (Aislamiento térmico).
 
 ## 5. Script Avanzado de Mensajes Retenidos (`avanzado_retained.py`)
 

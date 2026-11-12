@@ -40,12 +40,6 @@ def evaluar_reglas(e):
       Justificación: Protección solar pasiva contra sobrecalentamiento por radiación
     - R5: Presencia activa (1) Y Luz < 150 lux -> Bombilla ON.
       Justificación: Mantenimiento de iluminación artificial si oscurece con usuarios dentro
-
-    Reglas extra añadidas
-    - R6: Temperatura > 30.0 C Y Presencia activa (1) -> Persiana ABIERTA.
-      Justificación: Mejora del flujo de aire y refrigeración pasiva para confort térmico.
-    - R7: Temperatura < 18.0 C -> Persiana CERRADA.
-      Justificación: Aislamiento térmico pasivo para evitar pérdidas de calor en épocas frías.
     """
     ordenes = {}
     reglas_disparadas = []
@@ -95,20 +89,6 @@ def evaluar_reglas(e):
         if persiana_actual != "CERRADA":
             ordenes["persiana"] = "CERRADA"
             reglas_disparadas.append(f"R4: Mucha luz y aire seco -> P CER")
-
-    # REGLA R6: Temperatura elevada (> 30.0 C) con presencia activa -> Abrir persiana
-    # Justificación: Mejora del flujo de aire y refrigeración pasiva por confort térmico.
-    if temperatura is not None and temperatura > 30.0 and presencia == 1:
-        if persiana_actual != "ABIERTA":
-            ordenes["persiana"] = "ABIERTA"
-            reglas_disparadas.append(f"R6: Temperatura alta con presencia -> P ABI")
-
-    # REGLA R7: Temperatura baja (< 18.0 C) -> Cerrar persiana
-    # Justificación: Aislamiento térmico pasivo para evitar pérdidas de calor en épocas frías.
-    if temperatura is not None and temperatura < 18.0:
-        if persiana_actual != "CERRADA":
-            ordenes["persiana"] = "CERRADA"
-            reglas_disparadas.append(f"R7: Temperatura baja -> P CER")
 
     return ordenes, reglas_disparadas
 
