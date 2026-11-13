@@ -184,4 +184,178 @@ python ejecutar_todo.py g99 --sin-monitor
 
 ### Detener el sistema
 
-Pulsa `Ctrl + C` en cada terminal donde se esté ejecutando un componente. En el caso del lanzador, este se encarga de
+Pulsa `Ctrl + C` en cada terminal donde se esté ejecutando un componente. En el caso del lanzador, este se encarga de finalizar los procesos hijos de forma ordenada.
+
+---
+
+## 4.- Reglas Domóticas Evaluadas
+
+El motor de reglas (`reglas.py`) analiza los valores recibidos de los sensores y el estado conocido de los actuadores para decidir qué acciones deben ejecutarse.
+
+Se han implementado cinco reglas:
+
+- **R1: Entrada de una persona con poca iluminación.** Cuando la presencia cambia de 0 a 1 y la luz es inferior a 150 lux, se enciende la bombilla.
+- **R2: Salida de una persona.** Cuando la presencia cambia de 1 a 0, se apaga la bombilla y se cierra la persiana.
+- **R3: Humedad elevada.** Cuando la humedad relativa supera el 70 %, se abre la persiana para favorecer la ventilación.
+- **R4: Exceso de luz natural y humedad baja.** Cuando la iluminación supera los 600 lux y la humedad es inferior al 40 %, se cierra la persiana.
+- **R5: Presencia activa con poca iluminación.** Si hay una persona en la habitación y la luz baja de 150 lux, se enciende la bombilla, aunque la persona ya estuviera dentro.
+
+Las órdenes generadas por el motor de reglas se publican en los tópicos `set` de los actuadores mediante QoS 1.
+
+Los actuadores reciben estas órdenes, actualizan su estado y publican una confirmación en sus respectivos tópicos `estado`.
+
+---
+
+## 5.- Demostración de Mensajes Retenidos (`avanzado_retained.py`)
+
+Este script permite comprobar el funcionamiento del atributo `retain` de MQTT y las diferencias entre los mensajes retenidos y los mensajes efímeros.
+
+Se publican dos mensajes en tópicos diferentes:
+
+- Un mensaje con `retain=False`, que no queda almacenado en el broker.
+- Un mensaje con `retain=True`, cuyo último valor queda almacenado para futuros suscriptores.
+
+Después de desconectar al publicador, un nuevo cliente se suscribe a ambos tópicos para comprobar que recibe el mensaje retenido, pero no el mensaje efímero publicado anteriormente.
+
+**Ejecución:**
+
+```bash
+python avanzado_retained.py g99
+```
+
+---
+
+## 6.- Demostración de Last Will and Testament (LWT) y Keepalive (`avanzado_lwt.py`)
+
+Este script demuestra el mecanismo **Last Will and Testament (LWT)** y el funcionamiento del parámetro `Keepalive`.
+
+El cliente sensor se conecta al broker y registra un mensaje de testamento (`OFFLINE`). A continuación, publica su estado `ONLINE` y simula una caída inesperada de la conexión.
+
+Un segundo cliente permanece conectado al broker y escucha el tópico del testamento para detectar cuándo HiveMQ publica automáticamente el mensaje `OFFLINE`.
+
+El programa mide el tiempo transcurrido desde la caída simulada hasta la recepción del mensaje LWT.
+
+**Ejecución:**
+
+```bash
+python avanzado_lwt.py g99
+```
+
+---
+
+## 7.- Comparación de Calidad de Servicio y Latencia (QoS) (`avanzado_qos_latencia.py`)
+
+Este script permite comparar los tres niveles de calidad de servicio de MQTT y observar cómo afectan al tiempo de respuesta de las publicaciones.
+
+Se envían diez mensajes para cada nivel de QoS:
+
+- **QoS 0 – At most once:** el mensaje se envía sin confirmación de entrega.
+- **QoS 1 – At least once:** el broker confirma la recepción mediante `PUBACK`. Puede producirse la entrega de mensajes duplicados.
+- **QoS 2 – Exactly once:** utiliza un intercambio de cuatro paquetes (`PUBLISH`, `PUBREC`, `PUBREL` y `PUBCOMP`) para garantizar la entrega exactamente una vez dentro del protocolo.
+
+Para cada nivel se calculan las siguientes estadísticas:
+
+- Tiempo medio.
+- Tiempo mínimo.
+- Tiempo máximo.
+- Desviación típica.
+
+En QoS 0 se mide el tiempo de envío local, ya que no existe una confirmación de recepción equivalente a la de los otros niveles. En QoS 1 y QoS 2 se mide el tiempo hasta completar el intercambio de confirmación correspondiente.
+
+**Ejecución:**
+
+```bash
+python avanzado_qos_latencia.py g99
+```
+
+---
+
+## 8.- Sesiones Persistentes y Caducidad de Mensajes MQTT 5 (`avanzado_sesion_per.py`)
+
+Este script demuestra el funcionamiento de las sesiones persistentes y la caducidad de mensajes mediante MQTT 5.
+
+Se conecta un actuador utilizando una sesión persistente y, posteriormente, se desconecta de forma ordenada. Mientras permanece desconectado, otro cliente publica tres órdenes QoS 1 con distintos tiempos de expiración.
+
+Las órdenes utilizadas son:
+
+| Orden | Prioridad lógica | Caducidad |
+|---|---:|---:|
+| Orden 1 | 1 | 30 segundos |
+| Orden 2 | 2 | 60 segundos |
+| Orden 3 | 3 | 3 segundos |
+
+Durante la desconexión del actuador se espera un intervalo de seis segundos. Después, el actuador vuelve a conectarse utilizando el mismo identificador de cliente y recupera su sesión.
+
+El objetivo es comprobar que:
+
+- La sesión persistente permite conservar la suscripción y los mensajes pendientes mientras el cliente está desconectado.
+- La Orden 1 y la Orden 2 siguen dentro de su periodo de validez y pueden entregarse al reconectar.
+- La Orden 3 ha superado su tiempo de expiración y el broker debe descartarla.
+
+La prioridad indicada es únicamente una clasificación lógica de las órdenes: MQTT no incorpora un mecanismo nativo de prioridad para ordenar automáticamente los mensajes.
+
+**Ejecución:**
+
+```bash
+python avanzado_sesion_per.py g99
+```
+
+---
+
+## 9.- Almacenamiento y Registro de Datos
+
+El controlador central (`controlador.py`) recibe los mensajes publicados por los sensores y los actuadores y almacena la información en archivos CSV.
+
+Se generan dos tipos de registros:
+
+**Registro general de sensores:**
+
+```text
+output/registro_sensores.csv
+```
+
+Contiene las lecturas recibidas de los sensores.
+
+**Registros individuales de eventos:**
+
+```text
+output/events/
+├── presencia.csv
+├── temperatura.csv
+├── humedad.csv
+└── luz.csv
+```
+
+Estos archivos permiten consultar y analizar por separado los eventos registrados para cada sensor.
+
+---
+
+## 10.- Arquitectura de Comunicación MQTT
+
+La comunicación entre los componentes se realiza mediante tópicos MQTT organizados por grupo.
+
+La estructura general utiliza el prefijo:
+
+```text
+iotlab26/{grupo}/
+```
+
+Los principales canales de comunicación son:
+
+| Tópico | Función |
+|---|---|
+| `sensor/{tipo}` | Publicación de lecturas de los sensores. |
+| `actuador/{tipo}/set` | Recepción de órdenes por parte de los actuadores. |
+| `actuador/{tipo}/estado` | Publicación del estado actual de los actuadores. |
+| `actuador/{tipo}/lwt` | Comunicación del estado de conexión mediante LWT. |
+| `sistema/regla` | Publicación de las reglas domóticas activadas. |
+
+El flujo principal de comunicación es el siguiente:
+
+1. Los sensores publican sus lecturas en el broker.
+2. El motor de reglas recibe los datos y evalúa las condiciones domóticas.
+3. Cuando es necesario, publica órdenes en los tópicos `set` de los actuadores.
+4. Los actuadores reciben las órdenes, ejecutan los cambios y publican sus estados en los tópicos `estado`.
+5. El controlador central recibe los mensajes y actualiza la información de la habitación, además de almacenar los registros CSV.
+
+De esta forma, los componentes funcionan de manera independiente y se comunican mediante el broker MQTT, sin necesidad de establecer conexiones directas entre ellos.
