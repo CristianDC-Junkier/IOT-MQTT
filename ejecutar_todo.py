@@ -22,11 +22,13 @@ from config import GRUPO_DEFAULT
 DIR_ACTUAL = os.path.dirname(os.path.abspath(__file__))
 
 
-# Configura los parámetros permitidos al ejecutar el sistema.
-# Se puede seleccionar el grupo, modificar el periodo de los sensores
-# o elegir qué módulos se desean iniciar.
-
 def parse_args():
+
+    """
+    Configura los parámetros permitidos al ejecutar el sistema.
+    Se puede seleccionar el grupo, modificar el periodo de los sensores
+    o elegir qué módulos se desean iniciar.
+    """
 
     parser = argparse.ArgumentParser(
         description="Lanzador conjunto del sistema IoT de la Práctica 2"
@@ -323,13 +325,6 @@ def main():
             "¡Hasta pronto!\n"
         )
 
-
-# ********************************************************************
-#                  6.- PUNTO DE ENTRADA DEL PROGRAMA
-# ********************************************************************
-
-# Ejecuta la función principal únicamente cuando el archivo
-# se inicia directamente y no cuando se importa desde otro módulo.
 
 if __name__ == "__main__":
     main()

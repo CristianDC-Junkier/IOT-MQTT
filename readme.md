@@ -1,41 +1,39 @@
 # Práctica 2: Sistema IoT Domótico con Protocolo MQTT
 
-Este proyecto implementa una solución completa de IoT para la gestión inteligente de una habitación utilizando el protocolo **MQTT**, el broker público **HiveMQ** (`broker.hivemq.com`), y almacenamiento local protegido de datos de telemetría y eventos.
+Este proyecto implementa un sistema IoT para la gestión inteligente de una habitación mediante el protocolo **MQTT** y el broker público **HiveMQ** (`broker.hivemq.com`).
+
+El sistema simula sensores virtuales, actuadores y un motor de reglas domóticas que automatiza el funcionamiento de una bombilla y una persiana. Además, incorpora un controlador central que monitoriza la actividad del sistema y almacena localmente los datos de telemetría y los eventos recibidos.
+
+También incluye varios scripts avanzados para demostrar el funcionamiento de las principales características de MQTT: mensajes retenidos (*Retained Messages*), testamento (*Last Will and Testament*), Keepalive, niveles de calidad de servicio (QoS), sesiones persistentes y caducidad de mensajes en MQTT 5.
 
 ---
 
 ## 1.- Estructura del Proyecto
 
-Asegúrate de que la estructura de carpetas y archivos en tu directorio de trabajo sea la siguiente:
-
-```text
-# Práctica 2: Sistema IoT Domótico con Protocolo MQTT
-
-Este proyecto implementa una solución completa de IoT para la gestión inteligente de una habitación utilizando el protocolo **MQTT**, el broker público **HiveMQ** (`broker.hivemq.com`), y almacenamiento local protegido de datos de telemetría y eventos.
-
----
-
-## 1.- Estructura del Proyecto
-
-Asegúrate de que la estructura de carpetas y archivos en tu directorio de trabajo sea la siguiente:
+La estructura de carpetas y archivos del proyecto es la siguiente:
 
 ```text
 Practica_2_IoT/
-├── config.py             # Configuración central (broker, tópicos y umbrales)
-├── sensor.py             # Emulador de sensores virtuales (luz, humedad, temperatura, presencia)
-├── actuador.py           # Simulador interactivo de actuadores (bombilla, persiana)
-├── reglas.py             # Motor reactivo de 7 reglas domóticas
-├── controlador.py        # Monitor central y generador de persistencia CSV
-├── lanzar_todo.py        # Lanzador automatizado conjunto mediante subprocesos
-├── avanzado_retained.py  # Script avanzado de demostración de mensajes retenidos
-├── avanzado_lwt.py       # Script avanzado de demostración de LWT y Keepalive
-├── data/                 # Ficheros CSV de entrada para los sensores virtuales
+├── config.py                  # Configuración del broker, tópicos y umbrales
+├── sensor.py                  # Emulador de sensores virtuales
+├── actuador.py                # Simulador de actuadores (bombilla y persiana)
+├── reglas.py                  # Motor de reglas domóticas (R1-R5)
+├── controlador.py              # Monitor central y registro de datos CSV
+├── ejecutar_todo.py            # Lanzador automatizado de los procesos
+│
+├── avanzado_retained.py        # Demostración de mensajes retenidos
+├── avanzado_lwt.py             # Demostración de LWT y Keepalive
+├── avanzado_qos_latencia.py    # Comparación de latencia entre QoS 0, 1 y 2
+├── avanzado_sesion_per.py      # Demostración de sesiones persistentes y expiración
+│
+├── data/                       # Datos de entrada de los sensores
 │   ├── datos_luz.csv
 │   ├── datos_humedad.csv
 │   ├── datos_temperatura.csv
 │   ├── datos_presencia.csv
-│   └── datos_sensores.csv (opcional unificado)
-└── output/               # Carpeta generada automáticamente para los CSVs de salida
+│   └── datos_sensores.csv      # Fichero unificado opcional
+│
+└── output/                     # Datos generados durante la ejecución
     ├── registro_sensores.csv
     └── events/
         ├── presencia.csv
@@ -44,16 +42,23 @@ Practica_2_IoT/
         └── luz.csv
 ```
 
+Los directorios y archivos de salida se generan automáticamente cuando se ejecuta el controlador.
+
 ---
 
 ## 2.- Requisitos Previos e Instalación
 
 ### Requisitos
+
 - Python 3.8 o superior.
-- Conexión activa a Internet (para conectar con el broker público `broker.hivemq.com`).
+- Conexión activa a Internet para comunicarse con el broker público HiveMQ.
+- Archivos CSV con los datos de entrada de los sensores.
 
 ### Instalación de dependencias
-Instala la biblioteca cliente oficial de MQTT para Python:
+
+El proyecto utiliza la biblioteca Paho MQTT para establecer las conexiones y realizar las comunicaciones mediante MQTT.
+
+Instala la dependencia con el siguiente comando:
 
 ```bash
 pip install paho-mqtt
@@ -61,103 +66,122 @@ pip install paho-mqtt
 
 ---
 
-## 3. Guía de Ejecución
+## 3.- Guía de Ejecución
 
-Existen dos modalidades principales para ejecutar y probar la práctica.
+Existen dos modalidades principales para ejecutar y probar el sistema. Se recomienda utilizar la primera, ya que permite visualizar por separado la actividad de los sensores, el motor de reglas y el controlador.
 
----
+### Opción A: Modo Recomendado (Ejecución Separada)
 
-### Opción A: Modo Automatizado (Recomendado)
+Para facilitar la visualización de los mensajes MQTT y las trazas generadas por cada componente, se recomienda utilizar tres terminales independientes.
 
-Inicia todo el sistema (Monitor, Actuador Bombilla, Actuador Persiana, Motor de Reglas y los 4 Sensores) en un único comando y en una sola terminal.
+**Terminal 1: Sensores virtuales**
 
-#### 1.- Ejecución estándar (Grupo `g99` por defecto):
+El lanzador inicia automáticamente los cuatro sensores, sin arrancar el resto de servicios:
+
 ```bash
-python lanzar_todo.py 
+python ejecutar_todo.py --solo-sensores
 ```
 
-#### 2.- Parámetros opcionales del lanzador:
-* **Cambiar el periodo de muestreo de los sensores (ej. cada 1.0 s):**
-  ```bash
-  python lanzar_todo.py g99 --periodo 1.0
-  ```
-* **Lanzar solo los actuadores y reglas (sin sensores):**
-  ```bash
-  python lanzar_todo.py g99 --solo-servicios
-  ```
-* **Detener el sistema:**
-  Presiona `Ctrl + C` en la terminal donde ejecutaste el comando. Todos los procesos hijos finalizan de forma limpia.
+También se puede especificar el grupo y el periodo de muestreo:
 
----
-
-### Opción B: Modo Manual (Múltiples Terminales)
-
-Para depurar, interactuar manualmente con los actuadores o ver las trazas de cada módulo por separado, abre **varias terminales simultáneas** en el directorio raíz del proyecto y ejecuta los siguientes comandos en el orden indicado:
-
-#### Terminal 1: Monitor y Registro CSV (`controlador.py`)
-Escucha toda la actividad del grupo (`iotlab26/g99/#`) y guarda las capturas en `output/`:
 ```bash
-python controlador.py 
+python ejecutar_todo.py g99 --solo-sensores --periodo 2.0
 ```
 
-#### Terminal 2: Motor de Reglas Domóticas (`reglas.py`)
-Procesa eventos y evalúa las 7 reglas (R1 a R7):
+**Terminal 2: Motor de reglas domóticas (`reglas.py`)**
+
+Recibe las lecturas de los sensores, evalúa las reglas domóticas y publica las órdenes correspondientes a los actuadores:
+
 ```bash
-python reglas.py 
+python reglas.py g99
 ```
 
-#### Terminal 3: Actuador de Bombilla (`actuador.py`)
-Simula la bombilla e interactúa por consola escribiendo `ON`, `OFF` o `q`:
+**Terminal 3: Monitor y registro CSV (`controlador.py`)**
+
+Escucha la actividad del grupo, muestra la información de la habitación y almacena los datos recibidos en archivos CSV:
+
+```bash
+python controlador.py g99
+```
+
+**Terminales adicionales: Actuadores**
+
+Si se desea visualizar también la actividad individual de los actuadores o interactuar manualmente con ellos, se pueden abrir dos terminales adicionales.
+
+**Actuador de bombilla:**
+
 ```bash
 python actuador.py --tipo bombilla --grupo g99
 ```
 
-#### Terminal 4: Actuador de Persiana (`actuador.py`)
-Simula la persiana e interactúa por consola escribiendo `ABIERTA`, `CERRADA` o `q`:
+Órdenes disponibles desde la consola:
+
+- `ON`: encender la bombilla.
+- `OFF`: apagar la bombilla.
+- `q`: finalizar el programa.
+
+**Actuador de persiana:**
+
 ```bash
 python actuador.py --tipo persiana --grupo g99
 ```
 
-#### Terminal 5: Sensores Virtuales (`sensor.py`)
-Puedes arrancar cada sensor individualmente especificando su tipo:
+Órdenes disponibles desde la consola:
+
+- `ABIERTA`: abrir la persiana.
+- `CERRADA`: cerrar la persiana.
+- `q`: finalizar el programa.
+
+Esta distribución permite observar por separado las publicaciones de los sensores, las decisiones del motor de reglas, las actualizaciones del controlador y las respuestas de los actuadores.
+
+### Opción B: Modo Automatizado Completo
+
+También es posible iniciar todos los componentes desde una única terminal mediante el lanzador:
+
 ```bash
-# Terminal 5a - Sensor de Luz
-python sensor.py --tipo luz --grupo g99 --periodo 2.0
-
-# Terminal 5b - Sensor de Humedad
-python sensor.py --tipo humedad --grupo g99 --periodo 2.0
-
-# Terminal 5c - Sensor de Temperatura
-python sensor.py --tipo temperatura --grupo g99 --periodo 2.0
-
-# Terminal 5d - Sensor de Presencia
-python sensor.py --tipo presencia --grupo g99 --periodo 2.0
+python ejecutar_todo.py
 ```
 
----
+El lanzador inicia automáticamente:
 
-## 4. Resumen de Reglas Domóticas Evaluadas
+- El controlador central.
+- El motor de reglas domóticas.
+- El actuador de la bombilla.
+- El actuador de la persiana.
+- Los cuatro sensores virtuales.
 
-* **R1:** Entrada de persona ($0 \rightarrow 1$) con Luz $< 150\text{ lux} \Rightarrow \text{Bombilla ON}$ (Confort visual).
-* **R2:** Salida de persona ($1 \rightarrow 0$) $\Rightarrow \text{Bombilla OFF}$ y $\text{Persiana CERRADA}$ (Eficiencia energética).
-* **R3:** Humedad relativa $> 70\% \Rightarrow \text{Persiana ABIERTA}$ (Ventilación).
-* **R4:** Luz natural $> 600\text{ lux}$ y Humedad $< 40\% \Rightarrow \text{Persiana CERRADA}$ (Protección solar).
-* **R5:** Presencia activa ($1$) con Luz $< 150\text{ lux} \Rightarrow \text{Bombilla ON}$ (Mantenimiento de luz).
+### Parámetros adicionales del lanzador
 
-## 5. Script Avanzado de Mensajes Retenidos (`avanzado_retained.py`)
+**Modificar el periodo de muestreo:**
 
-Para demostrar el comportamiento del flag `retain=True` frente a los mensajes efímeros (`retain=False`) tal como se exige en la práctica:
+Permite establecer el intervalo entre las publicaciones de los sensores. Por ejemplo, para publicar cada segundo:
 
-## 6. Testamento (Last Will and Testament, LWT) y Keepalive (`avanzado_lwt.py`)
-
-Este script automatizado mide el tiempo real que tarda el broker en detectar la caída imprevista de un nodo y disparar su testamento sin recurrir a polling HTTP continuo.
-
-#### Ejecución:
 ```bash
-python avanzado_lwt.py g99
+python ejecutar_todo.py g99 --periodo 1.0
 ```
 
-### Ejecución de la prueba:
+**Ejecutar únicamente los servicios:**
+
+Inicia el controlador, el motor de reglas y los dos actuadores, sin arrancar los sensores:
+
 ```bash
-python avanzado_retained.py g99
+python ejecutar_todo.py g99 --solo-servicios
 ```
+
+**Ejecutar únicamente los sensores:**
+
+```bash
+python ejecutar_todo.py g99 --solo-sensores
+```
+
+**Ejecutar sin el monitor:**
+
+Permite iniciar el resto de componentes sin arrancar el controlador central:
+
+```bash
+python ejecutar_todo.py g99 --sin-monitor
+```
+
+### Detener el sistema
+
+Pulsa `Ctrl + C` en cada terminal donde se esté ejecutando un componente. En el caso del lanzador, este se encarga de
