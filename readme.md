@@ -182,6 +182,34 @@ Permite iniciar el resto de componentes sin arrancar el controlador central:
 python ejecutar_todo.py g99 --sin-monitor
 ```
 
+**Alternativa: Ejecución individual de los sensores (`sensor.py`)**
+
+También es posible ejecutar cada sensor de forma independiente, sin utilizar el lanzador. Para ello, se utiliza `sensor.py`, indicando el tipo de sensor y, opcionalmente, el periodo de muestreo.
+
+El periodo por defecto es de **2 segundos**, por lo que no es necesario especificarlo si se desea utilizar ese intervalo.
+
+```bash
+# Sensor de luz
+python sensor.py --tipo luz --grupo g99
+
+# Sensor de humedad
+python sensor.py --tipo humedad --grupo g99
+
+# Sensor de temperatura
+python sensor.py --tipo temperatura --grupo g99
+
+# Sensor de presencia
+python sensor.py --tipo presencia --grupo g99
+```
+
+Para modificar el periodo de publicación, se puede utilizar el parámetro `--periodo`. Por ejemplo, para publicar una lectura cada segundo:
+
+```bash
+python sensor.py --tipo luz --grupo g99 --periodo 2.0
+```
+
+Cada sensor puede ejecutarse en una terminal independiente, permitiendo controlar individualmente su funcionamiento y periodo de publicación.
+
 ### Detener el sistema
 
 Pulsa `Ctrl + C` en cada terminal donde se esté ejecutando un componente. En el caso del lanzador, este se encarga de finalizar los procesos hijos de forma ordenada.
