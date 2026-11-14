@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """Módulo de Sensor Virtual para la Práctica 2 IoT."""
 
@@ -16,7 +15,6 @@ from config import (
     topic_sensor,
 )
 
-
 # ********************************************************************
 #             1.- CONFIGURACIÓN Y UNIDADES DE LOS SENSORES
 # ********************************************************************
@@ -31,7 +29,6 @@ UNIDADES = {
     "temperatura": "C",
     "presencia": "binario",
 }
-
 
 # ********************************************************************
 #                  2.- GESTIÓN DE ARGUMENTOS

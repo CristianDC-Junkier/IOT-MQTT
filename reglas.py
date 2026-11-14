@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """Motor de Reglas Domóticas (Consumidor de Eventos) para la Práctica 2 IoT."""
 
@@ -12,7 +11,6 @@ from config import (
     UMBRAL_HUMEDAD_ALTA, UMBRAL_HUMEDAD_BAJA,
     topic_base, topic_actuador_set, topic_reglas
 )
-
 
 # ************************************************************
 #   1.- GESTIÓN DE ARGUMENTOS Y CONFIGURACIÓN DEL SISTEMA

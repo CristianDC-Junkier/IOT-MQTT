@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 Script automatizado de demostración y prueba del funcionamiento de
@@ -11,7 +10,6 @@ import threading
 import paho.mqtt.client as mqtt
 
 from config import BROKER_DEFAULT, PUERTO_DEFAULT, GRUPO_DEFAULT
-
 
 # ********************************************************************
 #     1.- CONFIGURACIÓN DE LA DEMOSTRACIÓN
